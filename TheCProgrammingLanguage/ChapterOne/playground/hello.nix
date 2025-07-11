@@ -1,4 +1,6 @@
 # hello.nix
+# yoinked from https://book.divnix.com/ch06-01-simple-c-program.html
+
 let
   pkgs = import <nixpkgs> { };
 in
