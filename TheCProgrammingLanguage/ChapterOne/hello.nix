@@ -18,9 +18,5 @@ in
 		mkdir -p $out/bin
 		cp hello_nix $out/bin/hello_nix
 	'';
-
-	postPhase = ''
-		./result/bin/hello_nix
-	'';
   }
 
