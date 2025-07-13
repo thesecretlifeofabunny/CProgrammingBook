@@ -112,7 +112,7 @@ bool RemoveCommentsOfFile(FILE* file_to_remove_comments_from){
             else if (is_multi_line_comment && !at_multi_line_comment_end && !is_line_end){
                 continue;
             }
-            else if (is_multi_line_comment && is_line_end){
+            else if (was_multi_line_comment_in_this_line && is_line_end){
                 line_to_new_file[j] = '\n';
                 line_to_new_file[j+1] = '\0';
             }

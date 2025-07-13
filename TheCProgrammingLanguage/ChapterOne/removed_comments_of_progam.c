@@ -34,9 +34,9 @@ int main(int argc, char* argv[]){
 
 
 
-    FI
-    if (file_to_remove_comments == NULL){ileSpecified(argv[1], "r");
-        printf("failed to open file\n");{ileSpecified(argv[1], 
+    
+    if (file_to_remove_comments == NULL){
+        printf("failed to open file\n");
         return 1;
     }
 
@@ -54,7 +54,7 @@ int main(int argc, char* argv[]){
 
 bool RemoveCommentsOfFile(FILE* file_to_remove_comments_from){
     char line_from_file[MAX_LINE_LENGTH]; 
-    char line_to_new_file[MAX_LINE_LENGTH]; ve_comments_from){
+    char line_to_new_file[MAX_LINE_LENGTH]; 
 
     FILE* file_to_write_to = OpenFileSpecified(OUT_FILE, "w");
 
