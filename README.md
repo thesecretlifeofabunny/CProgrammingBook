@@ -22,3 +22,10 @@ as a debugger if need. I may run some code in clion from time to time to see wha
 https://wiki.nixos.org/wiki/C
 
 https://nix.dev/tutorials/working-with-local-files
+
+
+## How To Run
+
+- download nix from nixos.org or https://github.com/DeterminateSystems/nix-installer
+-- run nix-build file_name.nix
+-- run the file at ./results/bin/file_name_to_run from the same directory as file_name.nix
