@@ -24,13 +24,13 @@
 
 bool RemoveCommentsOfFile(FILE*);
 void PrintLinesOfFile(FILE*);
-FILE* OpenFileSpecified(char const* const);
+FILE* OpenFileSpecified(char const* const, char []);
 bool NotEnoughArgumentsProvided(int);
 
 int main(int argc, char* argv[]){
     if (NotEnoughArgumentsProvided(argc)) return 1;   
 
-    FILE* file_to_remove_comments = OpenFileSpecified(argv[1]);
+    FILE* file_to_remove_comments = OpenFileSpecified(argv[1], "r");
     
     if (file_to_remove_comments == NULL){
         printf("failed to open file\n");
@@ -42,22 +42,57 @@ int main(int argc, char* argv[]){
 
     if (!result_of_removal){
         printf("failed to remove comments sowwy :(\n");
+        return 1;
     }
     
     fclose(file_to_remove_comments);
     return 0;
 }
 
-bool RemoveComemntsOfFile(FILE* file_to_remove_comments_from){
-    
-    char line[MAX_LINE_LENGTH];
+bool RemoveCommentsOfFile(FILE* file_to_remove_comments_from){
+    char line_from_file[MAX_LINE_LENGTH];
+    char line_to_new_file[MAX_LINE_LENGTH];
 
-    while(fgets(line, sizeof(line), file_to_remove_comments_from)){
-        printf("%s", line);
+    FILE* file_to_write_to = OpenFileSpecified(OUT_FILE, "w");
+
+    if (file_to_write_to == NULL){
+        printf("Failed to open file to write to");
+        return false;
+    }
+      
+    while(fgets(line_from_file, sizeof(line_from_file), file_to_remove_comments_from)){
+        // ideally make a new function, but I'm not good enough at c yet
+        // and it'd require pointers which is ch5 and im on ch4 of the book.
+        for (int i = 0 ; i < MAX_LINE_LENGTH ; i++){
+            char current_char = line_from_file[i];               
+
+            bool is_line_end = current_char == '\0' || current_char == '\n';
+            bool is_basic_comment = false;
+            
+            if (!is_line_end){
+                is_basic_comment = current_char == '/' && i+1 < MAX_LINE_LENGTH && line_from_file[i+1] == '/';
+            }
+            
+            if (!is_line_end &&  !is_basic_comment){
+                line_to_new_file[i] = current_char;
+            } else {
+                line_to_new_file[i] = '\n';
+                line_to_new_file[i+1] = '\0';
+            }
+                        
+            if (is_line_end || is_basic_comment) {
+                printf("%s", line_to_new_file);
+                fprintf(file_to_write_to, "%s", line_to_new_file);
+                break;
+            }
+        }
     }
 
+    fclose(file_to_write_to);
+  
     return true;
 }
+
 
 void PrintLinesOfFile(FILE* file_to_print){
     // debugging function
@@ -68,11 +103,9 @@ void PrintLinesOfFile(FILE* file_to_print){
     }
 }
 
-FILE* OpenFileSpecified(char const* const file_name){
-    printf("removing comments in %s", file_name);
-
+FILE* OpenFileSpecified(char const* const file_name, char mode[]){
     char line[MAX_LINE_LENGTH];
-    return fopen(file_name, "r");
+    return fopen(file_name, mode);
 }
 
 bool NotEnoughArgumentsProvided(int argc){
