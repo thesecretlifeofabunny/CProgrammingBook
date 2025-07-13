@@ -15,6 +15,10 @@
 #define MIN_ARGUMENTS 2
 #define MAX_LINE_LENGTH 1024
 
+#define COMMENT_OPENER_AND_CLOSER '"'
+#define COMMENT_BLOCK_OPENER "/*"
+#define COMMENT_BLOCK_CLOSER "*/"
+
 // todo generalize the out_file
 #define OUT_FILE "removed_comments_of_progam.c"
 
@@ -27,9 +31,12 @@ int main(int argc, char* argv[]){
     if (NotEnoughArgumentsProvided(argc)) return 1;   
 
     FILE* file_to_remove_comments = OpenFileSpecified(argv[1], "r");
-    
-    if (file_to_remove_comments == NULL){
-        printf("failed to open file\n");
+/* 8fehjfkdjsfdksljfdksl
+fjdksl
+jfkdls
+*/    
+    if/*f jfdjsklfjdskla; fjdsal; fjdkla; fjdksal;8*/ (file_to_remove_comments == NULL){
+        printf/*fjdisklfjdsklfsdjl8*/("failed to open file\n");
         return 1;
     }
 
@@ -40,14 +47,14 @@ int main(int argc, char* argv[]){
         printf("failed to remove comments sowwy :(\n");
         return 1;
     }
-    
-    fclose(file_to_remove_comments);
-    return 0;
+    // fdjskfldsjkfsdjlkfds
+    fclose(file_to_remove_comments); // fdjsklfjldask;jfklsda
+    return 0; // fjdsklfjdskl
 }
 
 bool RemoveCommentsOfFile(FILE* file_to_remove_comments_from){
-    char line_from_file[MAX_LINE_LENGTH];
-    char line_to_new_file[MAX_LINE_LENGTH];
+    char line_from_file[MAX_LINE_LENGTH]; //fdsa fdsa 
+    char line_to_new_file[MAX_LINE_LENGTH]; /* fjdsklfjkds // fjdsklfjdskfjk /. fjdsklfjdskfjdskl jkl  fjkdslfjkds sdfjkdsjfklds */
 
     FILE* file_to_write_to = OpenFileSpecified(OUT_FILE, "w");
 
@@ -78,7 +85,6 @@ bool RemoveCommentsOfFile(FILE* file_to_remove_comments_from){
             if (current_char == '"'){
                 is_string = !is_string;
             }
-            
             if (!is_line_end && !is_multi_line_comment && !is_string){
                 is_single_line_comment = current_char == '/' && i+1 < MAX_LINE_LENGTH && line_from_file[i+1] == '/';
             }
@@ -90,7 +96,7 @@ bool RemoveCommentsOfFile(FILE* file_to_remove_comments_from){
                     j = i;
                 }
             }
-            else if (is_multi_line_comment && !is_line_end && !is_string){
+            else if (is_multi_line_comment){
                 at_multi_line_comment_end = current_char == '*' && i+1 < MAX_LINE_LENGTH && line_from_file[i+1] == '/';
             }
                        
