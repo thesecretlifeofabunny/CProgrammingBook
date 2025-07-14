@@ -93,8 +93,13 @@ bool RemoveCommentsOfFile(FILE* file_to_remove_comments_from){
             else if (is_multi_line_comment && !is_line_end && !is_string){
                 at_multi_line_comment_end = current_char == '*' && i+1 < MAX_LINE_LENGTH && line_from_file[i+1] == '/';
             }
-                       
-            if (!is_line_end &&  !is_single_line_comment && !is_multi_line_comment && !was_multi_line_comment_in_this_line){
+
+            
+            if (i+2 >= MAX_LINE_LENGTH){
+                line_to_new_file[i] = '\n';
+                line_to_new_file[i+1] = '\0';
+            }      
+            else if (!is_line_end &&  !is_single_line_comment && !is_multi_line_comment && !was_multi_line_comment_in_this_line){
                 line_to_new_file[i] = current_char;
             }
             else if (!is_line_end && !is_single_line_comment && !is_multi_line_comment && was_multi_line_comment_in_this_line){
@@ -128,7 +133,7 @@ bool RemoveCommentsOfFile(FILE* file_to_remove_comments_from){
                 line_to_new_file[i+1] = '\0';
             }
                         
-            if (is_line_end || is_single_line_comment) {
+            if (is_line_end || is_single_line_comment || i+2 >= MAX_LINE_LENGTH) {
                 printf("%s", line_to_new_file);
                 fprintf(file_to_write_to, "%s", line_to_new_file);
                 break;
