@@ -173,6 +173,11 @@ int CalculateFileNameLength(char* file_name_to_calculate, int output_prefix_leng
     }
 
     while (i < max_file_name_length_minus_prefix){
+
+        if (file_name_to_calculate[i] == '\n' || file_name_to_calculate[i] == '\0' || file_name_to_calculate[i] == '\t'){
+            return -1;
+        }
+        
         if(file_name_to_calculate[i] != '.'){
             i++;
             continue;
