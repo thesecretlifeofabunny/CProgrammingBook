@@ -134,7 +134,6 @@ bool RemoveCommentsOfFile(FILE* file_to_remove_comments_from){
             }
                         
             if (is_line_end || is_single_line_comment || i+2 >= MAX_LINE_LENGTH) {
-                printf("%s", line_to_new_file);
                 fprintf(file_to_write_to, "%s", line_to_new_file);
                 break;
             }
