@@ -7,19 +7,22 @@
 - took pointers from this answer to get started, added enough formative work to not need to ref imho but no harm in contributing code sourcing.
 - https://stackoverflow.com/a/9206332
 
-*/
+- TODO
+    - Add unixtime appending to output file name
+    - refactor code a ton...
+*/ 
 
 #include <stdio.h>
 #include <stdbool.h>
+#include <string.h>
 
 #define MIN_ARGUMENTS 2
 #define MAX_LINE_LENGTH 1024
+// based on max length on EXT4
+#define MAX_FILE_NAME_LENGTH 255
 
-// todo generalize the out_file
-#define OUT_FILE "removed_comments_of_progam.c"
-
-bool RemoveCommentsOfFile(FILE*);
-void PrintLinesOfFile(FILE*);
+int CalculateFileNameLength(char*, int);
+bool RemoveCommentsOfFile(FILE*, char*);
 FILE* OpenFileSpecified(char const* const, char []);
 bool NotEnoughArgumentsProvided(int);
 
@@ -33,8 +36,7 @@ int main(int argc, char* argv[]){
         return 1;
     }
 
-    // PrintLinesOfFile(file_to_remove_comments);
-    bool result_of_removal = RemoveCommentsOfFile(file_to_remove_comments);
+    bool result_of_removal = RemoveCommentsOfFile(file_to_remove_comments, argv[1]);
 
     if (!result_of_removal){
         printf("failed to remove comments sowwy :(\n");
@@ -45,14 +47,30 @@ int main(int argc, char* argv[]){
     return 0;
 }
 
-bool RemoveCommentsOfFile(FILE* file_to_remove_comments_from){
+bool RemoveCommentsOfFile(FILE* file_to_remove_comments_from, char* original_file_name){
     char line_from_file[MAX_LINE_LENGTH];
     char line_to_new_file[MAX_LINE_LENGTH];
 
-    FILE* file_to_write_to = OpenFileSpecified(OUT_FILE, "w");
+    char output_file_prefix[] = "removed_comments_from_";
+    int output_file_prefix_length = 24;
+    int original_file_name_length = CalculateFileNameLength(original_file_name, output_file_prefix_length);
+
+    if (original_file_name_length < 0) {
+        printf("bad file name inputted, or failure on making a output file name\n");
+        return false;
+    }
+    
+    char output_file_name[output_file_prefix_length + original_file_name_length];
+
+    strncat(output_file_name, output_file_prefix, output_file_prefix_length);
+    strncat(output_file_name, original_file_name, original_file_name_length);
+    
+    printf("output file name is: %s\n", output_file_name);
+    
+    FILE* file_to_write_to = OpenFileSpecified(output_file_name, "w");
 
     if (file_to_write_to == NULL){
-        printf("Failed to open file to write to");
+        printf("Failed to open file to write to\n");
         return false;
     }
 
@@ -145,14 +163,29 @@ bool RemoveCommentsOfFile(FILE* file_to_remove_comments_from){
     return true;
 }
 
+int CalculateFileNameLength(char* file_name_to_calculate, int output_prefix_length){
+    int number_letters = 0;
+    int i = 1;
+    int max_file_name_length_minus_prefix = MAX_FILE_NAME_LENGTH - output_prefix_length;
 
-void PrintLinesOfFile(FILE* file_to_print){
-    // debugging function
-    char line[MAX_LINE_LENGTH];
-
-    while(fgets(line, sizeof(line), file_to_print)){
-        printf("%s", line);
+    if (max_file_name_length_minus_prefix < 3){
+        return -1;
     }
+
+    while (i < max_file_name_length_minus_prefix){
+        if(file_name_to_calculate[i] != '.'){
+            i++;
+            continue;
+        }
+
+        if (i + 1 >= max_file_name_length_minus_prefix || file_name_to_calculate[i+1] != 'c'){
+            return -1;
+        }
+
+        return i+2;
+    }
+
+    return -1;
 }
 
 FILE* OpenFileSpecified(char const* const file_name, char mode[]){
