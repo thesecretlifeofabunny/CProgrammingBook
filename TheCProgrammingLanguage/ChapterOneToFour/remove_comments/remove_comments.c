@@ -6,10 +6,6 @@
 
 - took pointers from this answer to get started, added enough formative work to not need to ref imho but no harm in contributing code sourcing.
 - https://stackoverflow.com/a/9206332
-
-- TODO
-    - Add unixtime appending to output file name
-    - refactor code a ton...
 */ 
 
 #include <stdio.h>
@@ -21,10 +17,15 @@
 // based on max length on EXT4
 #define MAX_FILE_NAME_LENGTH 255
 
-int CalculateFileNameLength(char*, int);
-bool RemoveCommentsOfFile(FILE*, char*);
-FILE* OpenFileSpecified(char const* const, char []);
-bool NotEnoughArgumentsProvided(int);
+static int CalculateFileNameLength(char*, int);
+static bool RemoveCommentsOfFile(FILE*, char*);
+static FILE* OpenFileSpecified(char const* const, char []);
+static bool NotEnoughArgumentsProvided(int);
+
+
+/********************************************************************************************************
+*                                           PUBLIC FUNCTIONS                                            *
+********************************************************************************************************/
 
 int main(int argc, char* argv[]){
     if (NotEnoughArgumentsProvided(argc)) return 1;   
@@ -47,7 +48,11 @@ int main(int argc, char* argv[]){
     return 0;
 }
 
-bool RemoveCommentsOfFile(FILE* file_to_remove_comments_from, char* original_file_name){
+/********************************************************************************************************
+*                                           PRIVATE FUNCTIONS                                           *
+********************************************************************************************************/
+
+static bool RemoveCommentsOfFile(FILE* file_to_remove_comments_from, char* original_file_name){
     char line_from_file[MAX_LINE_LENGTH];
     char line_to_new_file[MAX_LINE_LENGTH];
 
@@ -159,11 +164,10 @@ bool RemoveCommentsOfFile(FILE* file_to_remove_comments_from, char* original_fil
     }
 
     fclose(file_to_write_to);
-  
     return true;
 }
 
-int CalculateFileNameLength(char* file_name_to_calculate, int output_prefix_length){
+static int CalculateFileNameLength(char* file_name_to_calculate, int output_prefix_length){
     int number_letters = 0;
     int i = 1;
     int max_file_name_length_minus_prefix = MAX_FILE_NAME_LENGTH - output_prefix_length;
@@ -173,12 +177,13 @@ int CalculateFileNameLength(char* file_name_to_calculate, int output_prefix_leng
     }
 
     while (i < max_file_name_length_minus_prefix){
-
-        if (file_name_to_calculate[i] == '\n' || file_name_to_calculate[i] == '\0' || file_name_to_calculate[i] == '\t'){
+        char current_char = file_name_to_calculate[i];
+        
+        if (current_char == '\n' || current_char == '\0' || current_char == '\t'){
             return -1;
         }
         
-        if(file_name_to_calculate[i] != '.'){
+        if(current_char != '.'){
             i++;
             continue;
         }
@@ -193,12 +198,12 @@ int CalculateFileNameLength(char* file_name_to_calculate, int output_prefix_leng
     return -1;
 }
 
-FILE* OpenFileSpecified(char const* const file_name, char mode[]){
+static FILE* OpenFileSpecified(char const* const file_name, char mode[]){
     char line[MAX_LINE_LENGTH];
     return fopen(file_name, mode);
 }
 
-bool NotEnoughArgumentsProvided(int argc){
+static bool NotEnoughArgumentsProvided(int argc){
     if (argc < MIN_ARGUMENTS){
         printf("This program requires one argument in the form of an absolute file path\n");
         printf("./remove_comments.c hello.c\n");
