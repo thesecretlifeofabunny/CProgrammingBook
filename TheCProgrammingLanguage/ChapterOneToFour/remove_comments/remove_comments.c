@@ -14,7 +14,7 @@
 
 #define MIN_ARGUMENTS 2
 #define MAX_LINE_LENGTH 1024
-// based on max length on EXT4
+// based on max length on EXT4, Linux VFS
 #define MAX_FILE_NAME_LENGTH 255
 
 static int CalculateFileNameLength(char*, int);
