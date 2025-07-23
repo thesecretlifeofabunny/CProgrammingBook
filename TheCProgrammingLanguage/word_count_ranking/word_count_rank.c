@@ -14,19 +14,27 @@ TODO:
 - print out function
 */
 
+#include <stddef.h>
 #include <stdio.h>
 #include <stdbool.h>
+#include <string.h>
 
 #define EXPECTED_AMOUNT_OF_ARGUMENTS 2
-#define HASH_TABLE_MIN_SIZE 32
+#define HASH_TABLE_MIN_SIZE 128
+// Linux VFS Standard
+#define MAX_FILE_NAME_LENGTH 255
+#define MAX_LINE_LENGTH 1024
+#define TOKENIZER_DELIMITTER " "
 
 struct WordCount{
     int count;
     char* word[];
 };
 
-static bool is_input_not_valid(int, char* []);
-static int compute_hash_of_word(char*);
+static void CountOccurancesOfWordsInFile(FILE*);
+static FILE* OpenFileSpecified(char const* const , char []);
+static bool IsInputNotValid(int, char* []);
+static int ComputeHashOfWord(char*);
 
 /********************************************************************************************************
 *                                           PUBLIC FUNCTIONS                                            *
@@ -34,15 +42,19 @@ static int compute_hash_of_word(char*);
 
 int main (int argc, char* argv[]) {
 
-    if(is_input_not_valid(argc, argv)){
-        printf("This program takes in at most %d argument(s) in the form of a file", EXPECTED_AMOUNT_OF_ARGUMENTS);
+    if(IsInputNotValid(argc, argv)){
         return 1;
     }
 
-    // naive before bed testing
-    int hash_of_word = compute_hash_of_word(argv[1]);
-    printf("hash of input is %d", hash_of_word);
+    FILE* file_to_count_words_from = OpenFileSpecified(argv[1], "r");
 
+    if (file_to_count_words_from == NULL){
+        printf("Unable to open the file, sowwy :c\n");
+        return 1;
+    }
+
+    CountOccurancesOfWordsInFile(file_to_count_words_from);
+    
     return 0;
 }
 
@@ -50,9 +62,25 @@ int main (int argc, char* argv[]) {
 /********************************************************************************************************
 *                                           PRIVATE FUNCTIONS                                           *
 ********************************************************************************************************/
+static void CountOccurancesOfWordsInFile(FILE* file_to_count_words_from){
+    char line_from_file[MAX_LINE_LENGTH];
+    char* tokenized_string;
+    
+    while(fgets(line_from_file, sizeof(line_from_file), file_to_count_words_from)){
+        tokenized_string = strtok(line_from_file, TOKENIZER_DELIMITTER);
+        while(tokenized_string != NULL){
+            
+            tokenized_string = strtok(NULL, TOKENIZER_DELIMITTER);
+        }
+    }
+}
+
+static FILE* OpenFileSpecified(char const* const file_name, char mode[]){
+    return fopen(file_name, mode);
+}
 
 // trivial ascii addition
-static int compute_hash_of_word(char* word){
+static int ComputeHashOfWord(char* word){
     int hash_value = 0;
     char* current_charecter = word;
     
@@ -63,7 +91,16 @@ static int compute_hash_of_word(char* word){
     return hash_value%HASH_TABLE_MIN_SIZE;
 }
 
-// TODO include checking on type of input, do I support stream of charects or just a file or what?
-static bool is_input_not_valid(int argc, char* argv[]){
-    return argc != EXPECTED_AMOUNT_OF_ARGUMENTS;
+static bool IsInputNotValid(int argc, char* argv[]){
+    if(argc != EXPECTED_AMOUNT_OF_ARGUMENTS) {
+        printf("This program takes in at most %d argument(s) in the form of a file\n", EXPECTED_AMOUNT_OF_ARGUMENTS);
+        return true;
+    }
+    
+    if(MAX_FILE_NAME_LENGTH == strnlen(argv[1], MAX_FILE_NAME_LENGTH)){
+        printf("The file name is over the limit, the limit of a file name length is %d\n", MAX_FILE_NAME_LENGTH);
+        return true;
+    }
+
+    return false;
 }
