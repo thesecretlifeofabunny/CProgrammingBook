@@ -5,13 +5,15 @@ precede each word by its count.
 
 TODO:
 
-- I think hashtable
-    - Hashtable will either be hashtable of the below struct first fit, or linked list on each fit and append to list at hash spot.
-- Need to do a hash function
-- struct of word + count attributes
-- for each word add word to map update count if hash hit + word match
-- seperate intake by punctation !?,. and spaces
-- print out function
+- Hash Table of Structs
+    - Default size should be sane, unsure if 2^5 or 2^6 starting or even 2^4?
+    - malloc() (don't need to calloc) for first iteration
+    - realloc() on currentsize <= HashTable.size - 1
+
+    - insert on word hash using ComputeHashOfWord
+    - simplest naive is first fit, so I will do that
+
+- can I pass strtok char* to COmputeHashOfWord? Need to investigate!
 */
 
 #include <stddef.h>
