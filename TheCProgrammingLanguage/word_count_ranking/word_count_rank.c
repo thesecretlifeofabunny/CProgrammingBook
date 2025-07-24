@@ -66,9 +66,22 @@ int main (int argc, char* argv[]) {
 /********************************************************************************************************
 *                                           PRIVATE FUNCTIONS                                           *
 ********************************************************************************************************/
-// TODO:
-//  - create hashtable array and insert and update as needed
-//  - sort array after
+/* TODO:
+  - create hashtable array and insert and update as needed
+  - sort array after
+  - Fix seg fault :sob:
+   
+[nix-shell:~/Code/c/CProgrammingBook/TheCProgrammingLanguage/word_count_ranking]$ gcc -ggdb -o word_count_rank word_count_rank.c -fsanitize=address -fno-omit-frame-pointer
+
+[nix-shell:~/Code/c/CProgrammingBook/TheCProgrammingLanguage/word_count_ranking]$ ./word_count_rank nixpkgs_contributing.txt | error.txt
+bash: error.txt: command not found
+AddressSanitizer:DEADLYSIGNAL
+=================================================================
+==27938==ERROR: AddressSanitizer: SEGV on unknown address 0x7f1024c42000 (pc 0x7f1024193d0c bp 0x7ffc8a9f9380 sp 0x7ffc8a9f8e68 T0)
+==27938==The signal is caused by a WRITE memory access.
+AddressSanitizer:DEADLYSIGNAL
+AddressSanitizer: nested bug in the same thread, aborting.
+*/
 static int CountOccurancesOfWordsInFile(FILE* file_to_count_words_from){
     char line_from_file[MAX_LINE_LENGTH];
     char* tokenized_string;
@@ -84,9 +97,11 @@ static int CountOccurancesOfWordsInFile(FILE* file_to_count_words_from){
         return 1;
     }
   
-    while(fgets(line_from_file, sizeof(line_from_file), file_to_count_words_from)){
+    while(NULL != fgets(line_from_file, sizeof(line_from_file), file_to_count_words_from)){
         tokenized_string = strtok(line_from_file, TOKENIZER_DELIMITTER);
         while(NULL != tokenized_string){
+            // seg faults here on strncpy, unsure why as the while loop is a null check.
+            // Wonder if its dirty bits or max Length exceeding.
             strncpy(current_word, tokenized_string, MAX_WORD_LENGTH);
             
             if (word_count_current_count + 1 >= word_count_hash_table_current_length){
