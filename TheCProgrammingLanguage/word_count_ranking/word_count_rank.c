@@ -19,6 +19,7 @@ TODO:
 #include <stddef.h>
 #include <stdio.h>
 #include <stdbool.h>
+#include <stdlib.h>
 #include <string.h>
 
 #define EXPECTED_AMOUNT_OF_ARGUMENTS 2
@@ -27,13 +28,16 @@ TODO:
 #define MAX_FILE_NAME_LENGTH 255
 #define MAX_LINE_LENGTH 1024
 #define TOKENIZER_DELIMITTER " "
+// more than reasonable max for this program https://en.wikipedia.org/wiki/Longest_word_in_English
+#define MAX_WORD_LENGTH 28
 
 struct WordCount{
-    int count;
-    char* word[];
+    size_t count;
+    char*  word[];
 };
 
-static void CountOccurancesOfWordsInFile(FILE*);
+static int InsertWordIntoHashTable(char* , struct WordCount*, size_t, size_t);
+static int CountOccurancesOfWordsInFile(FILE*);
 static FILE* OpenFileSpecified(char const* const , char []);
 static bool IsInputNotValid(int, char* []);
 static int ComputeHashOfWord(char*);
@@ -50,31 +54,97 @@ int main (int argc, char* argv[]) {
 
     FILE* file_to_count_words_from = OpenFileSpecified(argv[1], "r");
 
-    if (file_to_count_words_from == NULL){
+    if (NULL == file_to_count_words_from){
         printf("Unable to open the file, sowwy :c\n");
         return 1;
     }
 
-    CountOccurancesOfWordsInFile(file_to_count_words_from);
-    
-    return 0;
+    return CountOccurancesOfWordsInFile(file_to_count_words_from);
 }
 
 
 /********************************************************************************************************
 *                                           PRIVATE FUNCTIONS                                           *
 ********************************************************************************************************/
-static void CountOccurancesOfWordsInFile(FILE* file_to_count_words_from){
+// TODO:
+//  - create hashtable array and insert and update as needed
+//  - sort array after
+static int CountOccurancesOfWordsInFile(FILE* file_to_count_words_from){
     char line_from_file[MAX_LINE_LENGTH];
     char* tokenized_string;
+    char* current_word;
+
+    size_t word_count_current_count = 0;
+    size_t word_count_hash_table_current_length = HASH_TABLE_MIN_SIZE;
+    size_t word_count_hash_table_bit_size = HASH_TABLE_MIN_SIZE * sizeof(struct WordCount);
+    struct WordCount* word_count_hash_table = (struct WordCount*)malloc(word_count_hash_table_bit_size);
     
+    if(NULL == word_count_hash_table){
+        printf("malloc failed to initialize the array\n");
+        return 1;
+    }
+  
     while(fgets(line_from_file, sizeof(line_from_file), file_to_count_words_from)){
         tokenized_string = strtok(line_from_file, TOKENIZER_DELIMITTER);
-        while(tokenized_string != NULL){
+        while(NULL != tokenized_string){
+            strncpy(current_word, tokenized_string, MAX_WORD_LENGTH);
+            
+            if (word_count_current_count + 1 >= word_count_hash_table_current_length){
+                word_count_hash_table_bit_size = word_count_hash_table_bit_size << 1;
+                struct WordCount* realloc_word_count_hash_table =
+                     (struct WordCount*)realloc(word_count_hash_table, word_count_hash_table_bit_size);
+
+                if (NULL == realloc_word_count_hash_table){
+                    printf("failed to reallocate more memory once table was full already.\n");
+                    return 1;
+                }
+
+                word_count_hash_table = realloc_word_count_hash_table;
+                realloc_word_count_hash_table = NULL;
+            }
+
+            int insertion_result =
+                InsertWordIntoHashTable(current_word, word_count_hash_table, word_count_current_count,
+                                         word_count_hash_table_current_length);
+
+            if (0 != insertion_result){
+                free(word_count_hash_table);
+                word_count_hash_table = NULL;
+                return 1;
+            }
             
             tokenized_string = strtok(NULL, TOKENIZER_DELIMITTER);
         }
     }
+
+    
+    free(word_count_hash_table);
+    word_count_hash_table = NULL;
+    return 0;
+}
+
+static int InsertWordIntoHashTable(char* word_to_add, struct WordCount* word_count_hash_table,
+                                    size_t word_count_current_count, size_t word_count_hash_table_current_length){
+
+    int hash_of_word = ComputeHashOfWord(word_to_add);
+    if ( hash_of_word < 0){
+        printf("bad hash , or bad word found");
+        return 1;
+    }
+
+    int i = 0;
+    while(i < word_count_hash_table_current_length){
+        
+
+        if (hash_of_word + 1 >= word_count_hash_table_current_length){
+            hash_of_word = -1;
+        }
+        
+        i++;
+        hash_of_word++;
+    }
+    
+    return 0;
 }
 
 static FILE* OpenFileSpecified(char const* const file_name, char mode[]){
@@ -86,7 +156,7 @@ static int ComputeHashOfWord(char* word){
     int hash_value = 0;
     char* current_charecter = word;
     
-    while(*current_charecter != '\0'){
+    while('\0' != *current_charecter){
         hash_value += (int)*current_charecter++;
     }
 
@@ -94,7 +164,7 @@ static int ComputeHashOfWord(char* word){
 }
 
 static bool IsInputNotValid(int argc, char* argv[]){
-    if(argc != EXPECTED_AMOUNT_OF_ARGUMENTS) {
+    if(EXPECTED_AMOUNT_OF_ARGUMENTS != argc) {
         printf("This program takes in at most %d argument(s) in the form of a file\n", EXPECTED_AMOUNT_OF_ARGUMENTS);
         return true;
     }
