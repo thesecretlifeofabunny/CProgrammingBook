@@ -2,18 +2,6 @@
 Exercise 6-4. Write a program that prints the distrinct words in its input
 sorted into descreasing order of frequency of occurance.
 precede each word by its count.
-
-TODO:
-
-- Hash Table of Structs
-    - Default size should be sane, unsure if 2^5 or 2^6 starting or even 2^4?
-    - malloc() (don't need to calloc) for first iteration
-    - realloc() on currentsize <= HashTable.size - 1
-
-    - insert on word hash using ComputeHashOfWord
-    - simplest naive is first fit, so I will do that
-
-- can I pass strtok char* to COmputeHashOfWord? Need to investigate!
 */
 
 #include <stddef.h>
@@ -37,6 +25,7 @@ struct WordCount{
     char  *word;
 };
 
+static int compare_two_word_counts(const void *, const void *);
 static void PrintHashTableToStdOut(struct WordCount*, size_t);
 static int InsertWordIntoHashTable(char* , struct WordCount*, size_t*, size_t);
 static int CountOccurancesOfWordsInFile(FILE*);
@@ -68,10 +57,11 @@ int main (int argc, char *argv[]) {
 /********************************************************************************************************
 *                                           PRIVATE FUNCTIONS                                           *
 ********************************************************************************************************/
-/* TODO:
-  - strip newline charecter from current_word
-  - sort array after
-*/
+
+static int compare_two_word_counts(const void *struct_one, const void *struct_two){
+    return (*(struct WordCount*)struct_two).count - (*(struct WordCount*)struct_one).count; 
+}
+
 static int CountOccurancesOfWordsInFile(FILE *file_to_count_words_from){
     char line_from_file[MAX_LINE_LENGTH];
     char *tokenized_string;
@@ -98,6 +88,11 @@ static int CountOccurancesOfWordsInFile(FILE *file_to_count_words_from){
         tokenized_string = strtok(line_from_file, TOKENIZER_DELIMITTER);
         while(NULL != tokenized_string){
             strncpy(current_word, tokenized_string, MAX_WORD_LENGTH);
+
+            char *does_string_have_new_line = strstr(current_word, "\n");
+            if(does_string_have_new_line != NULL){
+                 strncpy(does_string_have_new_line, "\0", 1);
+            }
             
             if (word_count_current_count + 1 >= word_count_hash_table_current_length){
                 word_count_hash_table_current_length = word_count_hash_table_current_length << 1;
@@ -136,6 +131,10 @@ static int CountOccurancesOfWordsInFile(FILE *file_to_count_words_from){
             tokenized_string = strtok(NULL, TOKENIZER_DELIMITTER);
         }
     }
+
+    qsort(word_count_hash_table, word_count_hash_table_current_length,
+           sizeof(word_count_hash_table[0]), compare_two_word_counts);
+    
     PrintHashTableToStdOut(word_count_hash_table, word_count_hash_table_current_length);
 
     free(current_word);
@@ -154,7 +153,7 @@ static void PrintHashTableToStdOut(struct WordCount *word_count_hash_table, size
 
         if (0 == current_word_count) continue;
 
-        printf("Word: %s with count: %zu\n", current_word, current_word_count );
+        printf("%zu counts of word: %s\n", current_word_count, current_word);
     }
 }
 
@@ -231,7 +230,7 @@ static FILE *OpenFileSpecified(char const *const file_name, char mode[]){
 }
 
 // trivial ascii addition
-// TODO support emojis?
+// TODO support emojis? support utf-8? (can't use strstr then...)
 /*
     [nix-shell:~/Code/c/CProgrammingBook/TheCProgrammingLanguage/word_count_ranking]$ ./result/bin/word_count_rank nixpkgs_contributing.txt
     current word that resulted in bad hash: ✔️
