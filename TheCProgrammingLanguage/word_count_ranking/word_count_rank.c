@@ -37,11 +37,12 @@ struct WordCount{
     char  *word;
 };
 
+static void PrintHashTableToStdOut(struct WordCount*, size_t);
 static int InsertWordIntoHashTable(char* , struct WordCount*, size_t*, size_t);
 static int CountOccurancesOfWordsInFile(FILE*);
 static FILE *OpenFileSpecified(char const* const , char []);
 static bool IsInputNotValid(int, char* []);
-static int ComputeHashOfWord(char*);
+static size_t ComputeHashOfWord(char*);
 
 /********************************************************************************************************
 *                                           PUBLIC FUNCTIONS                                            *
@@ -68,7 +69,7 @@ int main (int argc, char *argv[]) {
 *                                           PRIVATE FUNCTIONS                                           *
 ********************************************************************************************************/
 /* TODO:
-  - create hashtable array and insert and update as needed
+  - strip newline charecter from current_word
   - sort array after
 */
 static int CountOccurancesOfWordsInFile(FILE *file_to_count_words_from){
@@ -96,14 +97,11 @@ static int CountOccurancesOfWordsInFile(FILE *file_to_count_words_from){
     while(NULL != fgets(line_from_file, sizeof(line_from_file), file_to_count_words_from)){
         tokenized_string = strtok(line_from_file, TOKENIZER_DELIMITTER);
         while(NULL != tokenized_string){
-            // seg faults here on strncpy, unsure why as the while loop is a null check.
-            // Wonder if its dirty bits or max Length exceeding.
             strncpy(current_word, tokenized_string, MAX_WORD_LENGTH);
             
             if (word_count_current_count + 1 >= word_count_hash_table_current_length){
                 word_count_hash_table_current_length = word_count_hash_table_current_length << 1;
                 word_count_hash_table_byte_size = word_count_hash_table_byte_size << 1;
-                printf("size of byte malloc call %zul\n", word_count_hash_table_byte_size);
                 struct WordCount *realloc_word_count_hash_table =
                      (struct WordCount*)realloc(word_count_hash_table, word_count_hash_table_byte_size);
 
@@ -138,6 +136,7 @@ static int CountOccurancesOfWordsInFile(FILE *file_to_count_words_from){
             tokenized_string = strtok(NULL, TOKENIZER_DELIMITTER);
         }
     }
+    PrintHashTableToStdOut(word_count_hash_table, word_count_hash_table_current_length);
 
     free(current_word);
     current_word = NULL;
@@ -148,11 +147,21 @@ static int CountOccurancesOfWordsInFile(FILE *file_to_count_words_from){
     return 0;
 }
 
-// TODO add proper hash_table implementation
-static int InsertWordIntoHashTable(char *word_to_add, struct WordCount *word_count_hash_table,
-                                    size_t *word_count_current_count, size_t word_count_hash_table_current_length){
+static void PrintHashTableToStdOut(struct WordCount *word_count_hash_table, size_t word_count_hash_table_current_length){
+    for(int i = 0; i < word_count_hash_table_current_length ; i++){
+        char *current_word = word_count_hash_table[i].word;
+        size_t current_word_count = word_count_hash_table[i].count;
 
-    int hash_of_word = ComputeHashOfWord(word_to_add);
+        if (0 == current_word_count) continue;
+
+        printf("Word: %s with count: %zu\n", current_word, current_word_count );
+    }
+}
+
+static int InsertWordIntoHashTable(char *word_to_add, struct WordCount *word_count_hash_table,
+                                    size_t *hash_table_current_count, size_t word_count_hash_table_current_length){
+
+    size_t hash_of_word = ComputeHashOfWord(word_to_add);
     if ( hash_of_word < 0){
         // printf("current word that resulted in bad hash: %s\n", word_to_add);
         // printf("hash of bad value: %d\n", hash_of_word);
@@ -178,9 +187,26 @@ static int InsertWordIntoHashTable(char *word_to_add, struct WordCount *word_cou
 
     int i = 0;
     while(i < word_count_hash_table_current_length){
-        if (0 == word_count_hash_table[hash_of_word].count){
-            word_count_hash_table[i] = to_add_word_struct;
-            *word_count_current_count += 1;
+        struct WordCount current_struct_entry = word_count_hash_table[hash_of_word];
+        char *current_word = current_struct_entry.word;
+        size_t current_word_count = current_struct_entry.count;
+        
+        if (0 == current_word_count || NULL == current_word){
+            word_count_hash_table[hash_of_word] = to_add_word_struct;
+           *hash_table_current_count += 1;
+            return 0;
+        }
+
+        int size_of_current_word = strnlen(current_word, MAX_WORD_LENGTH);
+
+        if (MAX_WORD_LENGTH < size_of_current_word){
+            printf("garbage word found in hash table\n");
+            return 1;
+        }
+            
+        if (size_of_current_word == size_of_word_to_add &&
+             0 == strncmp(word_to_add, current_word, size_of_current_word)){
+            word_count_hash_table[hash_of_word].count += 1;
             return 0;
         }
 
@@ -217,12 +243,12 @@ static FILE *OpenFileSpecified(char const *const file_name, char mode[]){
     current word that resulted in bad hash: —
     hash of bad value: -10
 */
-static int ComputeHashOfWord(char *word){
-    int hash_value = 0;
+static size_t ComputeHashOfWord(char *word){
+    size_t hash_value = 0;
     char *current_charecter = word;
     
     while('\0' != *current_charecter){
-        hash_value += (int)*current_charecter++;
+        hash_value += (size_t)*current_charecter++;
     }
 
     return hash_value%HASH_TABLE_MIN_SIZE;
