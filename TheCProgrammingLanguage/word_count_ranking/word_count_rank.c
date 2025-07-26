@@ -2,6 +2,11 @@
 Exercise 6-4. Write a program that prints the distrinct words in its input
 sorted into descreasing order of frequency of occurance.
 precede each word by its count.
+
+TODO:
+    - fix fsantize address, and gdb ./result/bin/word_count_rank r path_to.txt
+        results in segfault in strnlen
+    - "works" at the moment still though, but should fix that...
 */
 
 #include <stddef.h>
@@ -29,7 +34,7 @@ static int compare_two_word_counts(const void *, const void *);
 static void PrintHashTableToStdOut(struct WordCount*, size_t);
 static int InsertWordIntoHashTable(char* , struct WordCount*, size_t*, size_t);
 static int CountOccurancesOfWordsInFile(FILE*);
-static FILE *OpenFileSpecified(char const* const , char []);
+static FILE *OpenFileSpecified(char const* , const char []);
 static bool IsInputNotValid(int, char* []);
 static size_t ComputeHashOfWord(char*);
 
@@ -162,22 +167,18 @@ static int InsertWordIntoHashTable(char *word_to_add, struct WordCount *word_cou
 
     size_t hash_of_word = ComputeHashOfWord(word_to_add);
     if ( hash_of_word < 0){
-        // printf("current word that resulted in bad hash: %s\n", word_to_add);
-        // printf("hash of bad value: %d\n", hash_of_word);
-        // printf("bad hash , or bad word found\n");
-        // non ascii charecter, fine to return 0 in testing.
         return 0;
     }
 
 
-    int size_of_word_to_add = strnlen(word_to_add, MAX_WORD_LENGTH);
+    size_t size_of_word_to_add = strnlen(word_to_add, MAX_WORD_LENGTH);
 
     if (MAX_WORD_LENGTH < size_of_word_to_add){
         printf("error in finding word length, shouldn't have been able to get here but we did :c \n");
         return 1;
     }
 
-    size_t size_of_bytes_of_word_to_add = size_of_word_to_add * sizeof(char);
+    size_t size_of_bytes_of_word_to_add = size_of_word_to_add * (size_t)sizeof(char);
 
     struct WordCount to_add_word_struct;
     to_add_word_struct.count = 1;
@@ -196,7 +197,7 @@ static int InsertWordIntoHashTable(char *word_to_add, struct WordCount *word_cou
             return 0;
         }
 
-        int size_of_current_word = strnlen(current_word, MAX_WORD_LENGTH);
+        size_t size_of_current_word = strnlen(current_word, MAX_WORD_LENGTH);
 
         if (MAX_WORD_LENGTH < size_of_current_word){
             printf("garbage word found in hash table\n");
@@ -210,7 +211,9 @@ static int InsertWordIntoHashTable(char *word_to_add, struct WordCount *word_cou
         }
 
         if (hash_of_word + 1 >= word_count_hash_table_current_length){
-            hash_of_word = -1;
+            hash_of_word = 0;
+            i++;
+            continue;
         }
         
         i++;
@@ -225,7 +228,7 @@ static int InsertWordIntoHashTable(char *word_to_add, struct WordCount *word_cou
     return 0;
 }
 
-static FILE *OpenFileSpecified(char const *const file_name, char mode[]){
+static FILE *OpenFileSpecified(char const *const file_name, const char mode[]){
     return fopen(file_name, mode);
 }
 

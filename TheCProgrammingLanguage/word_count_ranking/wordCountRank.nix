@@ -1,7 +1,7 @@
 # wordCountRanking.nix
 
 let
-  pkgs = import <nixpkgs> { };
+  pkgs = import <nixpkgs> {};
 in
   pkgs.stdenv.mkDerivation {
     name = "word_count_rank";
@@ -9,7 +9,7 @@ in
     src = ./.;
 
     buildPhase = ''
-      $CC word_count_rank.c -o word_count_rank
+      $CC -O -fsanitize=undefined -Wall word_count_rank.c -o word_count_rank
     '';
 
 	installPhase = ''
