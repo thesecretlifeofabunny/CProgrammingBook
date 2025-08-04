@@ -30,13 +30,13 @@ struct WordCount{
     char  *word;
 };
 
-static int compare_two_word_counts(const void *, const void *);
-static void PrintHashTableToStdOut(struct WordCount*, size_t);
-static int InsertWordIntoHashTable(char* , struct WordCount*, size_t*, size_t);
-static int CountOccurancesOfWordsInFile(FILE*);
-static FILE *OpenFileSpecified(char const* , const char []);
-static bool IsInputNotValid(int, char* []);
-static size_t ComputeHashOfWord(char*);
+static int _compareTwoWordCounts(const void *, const void *);
+static void _printHashTableToStdOut(struct WordCount*, size_t);
+static int _insertWordIntoHashTable(char* , struct WordCount*, size_t*, size_t);
+static int _countOccurancesOfWordsInFile(FILE*);
+static FILE *_openFileSpecified(char const* , const char []);
+static bool _isInputNotValid(int, char* []);
+static size_t _computeHashOfWord(char*);
 
 /********************************************************************************************************
 *                                           PUBLIC FUNCTIONS                                            *
@@ -44,18 +44,18 @@ static size_t ComputeHashOfWord(char*);
 
 int main (int argc, char *argv[]) {
 
-    if(IsInputNotValid(argc, argv)){
+    if(_isInputNotValid(argc, argv)){
         return 1;
     }
 
-    FILE *file_to_count_words_from = OpenFileSpecified(argv[1], "r");
+    FILE *file_to_count_words_from = _openFileSpecified(argv[1], "r");
 
     if (NULL == file_to_count_words_from){
         printf("Unable to open the file, sowwy :c\n");
         return 1;
     }
 
-    return CountOccurancesOfWordsInFile(file_to_count_words_from);
+    return _countOccurancesOfWordsInFile(file_to_count_words_from);
 }
 
 
@@ -63,11 +63,11 @@ int main (int argc, char *argv[]) {
 *                                           PRIVATE FUNCTIONS                                           *
 ********************************************************************************************************/
 
-static int compare_two_word_counts(const void *struct_one, const void *struct_two){
+static int _compareTwoWordCounts(const void *struct_one, const void *struct_two){
     return (*(struct WordCount*)struct_two).count - (*(struct WordCount*)struct_one).count; 
 }
 
-static int CountOccurancesOfWordsInFile(FILE *file_to_count_words_from){
+static int _countOccurancesOfWordsInFile(FILE *file_to_count_words_from){
     char line_from_file[MAX_LINE_LENGTH];
     char *tokenized_string;
 
@@ -120,7 +120,7 @@ static int CountOccurancesOfWordsInFile(FILE *file_to_count_words_from){
             }
 
             int insertion_result =
-                InsertWordIntoHashTable(current_word, word_count_hash_table, &word_count_current_count,
+                _insertWordIntoHashTable(current_word, word_count_hash_table, &word_count_current_count,
                                          word_count_hash_table_current_length);
 
             if (0 != insertion_result){
@@ -138,9 +138,9 @@ static int CountOccurancesOfWordsInFile(FILE *file_to_count_words_from){
     }
 
     qsort(word_count_hash_table, word_count_hash_table_current_length,
-           sizeof(word_count_hash_table[0]), compare_two_word_counts);
+           sizeof(word_count_hash_table[0]), _compareTwoWordCounts);
     
-    PrintHashTableToStdOut(word_count_hash_table, word_count_hash_table_current_length);
+    _printHashTableToStdOut(word_count_hash_table, word_count_hash_table_current_length);
 
     free(current_word);
     current_word = NULL;
@@ -151,7 +151,7 @@ static int CountOccurancesOfWordsInFile(FILE *file_to_count_words_from){
     return 0;
 }
 
-static void PrintHashTableToStdOut(struct WordCount *word_count_hash_table, size_t word_count_hash_table_current_length){
+static void _printHashTableToStdOut(struct WordCount *word_count_hash_table, size_t word_count_hash_table_current_length){
     for(int i = 0; i < word_count_hash_table_current_length ; i++){
         char *current_word = word_count_hash_table[i].word;
         size_t current_word_count = word_count_hash_table[i].count;
@@ -162,10 +162,10 @@ static void PrintHashTableToStdOut(struct WordCount *word_count_hash_table, size
     }
 }
 
-static int InsertWordIntoHashTable(char *word_to_add, struct WordCount *word_count_hash_table,
+static int _insertWordIntoHashTable(char *word_to_add, struct WordCount *word_count_hash_table,
                                     size_t *hash_table_current_count, size_t word_count_hash_table_current_length){
 
-    size_t hash_of_word = ComputeHashOfWord(word_to_add);
+    size_t hash_of_word = _computeHashOfWord(word_to_add);
     if ( hash_of_word < 0){
         return 0;
     }
@@ -228,7 +228,7 @@ static int InsertWordIntoHashTable(char *word_to_add, struct WordCount *word_cou
     return 0;
 }
 
-static FILE *OpenFileSpecified(char const *const file_name, const char mode[]){
+static FILE *_openFileSpecified(char const *const file_name, const char mode[]){
     return fopen(file_name, mode);
 }
 
@@ -245,7 +245,7 @@ static FILE *OpenFileSpecified(char const *const file_name, const char mode[]){
     current word that resulted in bad hash: —
     hash of bad value: -10
 */
-static size_t ComputeHashOfWord(char *word){
+static size_t _computeHashOfWord(char *word){
     size_t hash_value = 0;
     char *current_charecter = word;
     
@@ -256,7 +256,7 @@ static size_t ComputeHashOfWord(char *word){
     return hash_value%HASH_TABLE_MIN_SIZE;
 }
 
-static bool IsInputNotValid(int argc, char *argv[]){
+static bool _isInputNotValid(int argc, char *argv[]){
     if(EXPECTED_AMOUNT_OF_ARGUMENTS != argc) {
         printf("This program takes in at most %d argument(s) in the form of a file\n", EXPECTED_AMOUNT_OF_ARGUMENTS);
         return true;
